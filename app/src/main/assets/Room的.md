@@ -96,11 +96,11 @@ kapt 'androidx.room:room-compiler:2.2.5'
 
 4. 数据库的初始化以及全局单列
 
-   在前面的代码示例演示了如何声明这么数据库的关键部件，那么可以通过使用`Room.databaseBuilde`这个类中构建出来；
+   在前面的代码示例演示了如何声明数据库的关键部件，接下来利用`Room.databaseBuilde`将声明好的数据库对象进行构建；
 
-   注意操作为了避免内存泄漏最好使用Application中的context进行初始化并且全局单列避免过多的初始化或者不必要的操作；
+   注意为了避免内存泄漏最好使用Application中的context进行初始化，并且使用单列的方式去创建数据库，用以避免不必要的初始化。
 
-   例如这样的实现去构建全局的单列
+   如下可采用类似的方式去构建初始化数据库。
 
    ```kotlin
    object AppDBManager {
