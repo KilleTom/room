@@ -13,5 +13,6 @@ class UserEntity(
     @ColumnInfo(name = "nick_name")
     val nickName: String,
     val sex: String,
+    var birthday:String?,
     var age:Int
 )
