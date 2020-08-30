@@ -1,4 +1,4 @@
-# Room的
+# 作用于Dao的注解用来作为Room的
 
 Room做为jetpack的核心组件之一，其目的是通过对sqlLite进行封装，目的在于更为便捷的操作数据库。
 
@@ -13,19 +13,19 @@ kapt 'androidx.room:room-compiler:2.2.5'
 
   在使用讲解之前，先简单的介绍以下room的一些注解
 
-| 注解                       | 含义                                                         |
-| -------------------------- | ------------------------------------------------------------ |
-| Entity                     | 数据表名                                                     |
-| ColumnInfo                 | 作用于Entity，对某些字段进行命名,如不使用：则Entity对象中的成员变量则会以其命名变作为数据表表中的字段名 |
-| PrimaryKey                 | 主键，设置autoGenerate是否为自增                             |
-| Dao                        | 数据库操作的接口                                             |
-| Query                      | 作用于Dao的注解用来作为查询使用，也可以作用与条件删除数据    |
-| Insert                     | 用来插入数据，                                               |
-| OnConflictStrategy.REPLACE | 作用与Insert目的在于插入时候对已存在的数据进行覆盖插入       |
-| Delete                     | 作用与Dao内用以删除数据                                      |
-| Database                   | 数据库的注解用来创建生产该数据库内的数据表，并返回Dao对象进行操作数据库 |
-| entities                   | 作用于Database注解，用来表明这个数据库内会有多少张数据表     |
-|                            |                                                              |
+| 注解               | 含义                                                         |
+| ------------------ | ------------------------------------------------------------ |
+| Entity             | 数据表名                                                     |
+| ColumnInfo         | 作用于Entity，对某些字段进行命名,如不使用：则Entity对象中的成员变量则会以其命名变作为数据表表中的字段名 |
+| PrimaryKey         | 主键，设置autoGenerate是否为自增                             |
+| Dao                | 数据库操作接口                                               |
+| Query              | 作用于Dao内可用于查询，也可用户条件删除                      |
+| Insert             | 作用于Dao内用于插入数据                                      |
+| OnConflictStrategy | Insert的配置选项                                             |
+| Delete             | 作用于Dao内用于删除数据                                      |
+| Database           | 数据库的注解，用以表明数据库，并且返回业务所需的Dao对象      |
+| entities           | 作用于Database注解，表示业务所需多少张数据表。               |
+|                    |                                                              |
 
 
 
@@ -33,7 +33,7 @@ kapt 'androidx.room:room-compiler:2.2.5'
 
 1. entity的构建
 
-   首先利用Entity注解表明这张数据表表名:kille_tom_user;
+   首先利用Entity注解表明示例数据表表名为：kille_tom_user;
    其次利用@PrimaryKey(autoGenerate = false) 表明用户id为主键并且不可递增;
    
    其次利用ColumnInfo 对realName以及nickName分别进行数据字段命名。
