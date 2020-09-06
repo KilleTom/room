@@ -20,6 +20,8 @@ object AppDBManager {
                         .allowMainThreadQueries()
                         .addMigrations(DB_MARGIN_1_to_2,DB_MARGIN_2_to_3)
                         .build()
+
+
                 }
             }
         }
