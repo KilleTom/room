@@ -14,5 +14,11 @@ class UserEntity(
     val nickName: String,
     val sex: String,
     var birthday:String?,
-    var age:Int
+    var age:Int,
+    @ColumnInfo(name = "real_country")
+    val realCountry: String?,
+    @ColumnInfo(name = "real_address")
+    val realAddress: String?,
+    @ColumnInfo(name = "card_id")
+    val cardID: String?
 )

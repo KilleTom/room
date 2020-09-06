@@ -225,6 +225,199 @@ abstract class AppDB : RoomDatabase(){
 
 还记得我们得UserEntity吗？在UserEntity中我们有realName代表者用户是否实名了，那么相应的用户实名信息，我们应该如何存储？有两种方式：
 
-1. 新增一张实名数据表，以及用户数据表新增一个reaIId，将实名数据表的主键与用户表中realId进行关联。
+1. 新增一张实名数据表，通过操作数据表对用户执行相应的操作。
 2. 直接在用户数据表中扩展数据字段存储响应数据。
 
+针对以上两种方式我们可以分别探讨:
+
+在探讨前先抽离出我们所需要通用的数据；例如：用户所在的国家、详细地址、用户真实姓名、以及用户惟一证件id，例如我们的身份证号码。
+
+那么我们现在开始通过这两种方式示例代码进行探讨Room的兼容与升级。
+
+### 新增表方式的实现
+
+基于前面提出的三大基本数据：国家、地址、证件id；我们可以设计一张这样数据表
+
+```kotlin
+@Entity(tableName = "real_name_infor")
+class RealNameInforEntity(
+
+    @PrimaryKey
+    var id: String = "",
+
+    val userId: String,
+    
+    val country: String,
+
+    val address: String,
+
+    val cardID: String,
+    
+    val userRealName:String
+)
+```
+
+对应Dao可以这样去声明
+
+```kotlin
+@Dao
+interface RealNameInforDao {
+
+    @Query("select * from real_name_infor ")
+    fun getAllRealData():List<RealNameInforEntity>
+
+    @Query("select * from real_name_infor where userId=:id")
+    fun getRealDataForUserId(id:String):RealNameInforEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertUpdate(entities:List<RealNameInforEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    fun insertUpdate(entity: RealNameInforEntity)
+
+}
+```
+
+对应的Dao以及Entity有了，那么我们的DB版本也必须进行修改，避免程序升级安装后，可能因为数据没做兼容出现的一系列问题。
+
+首先进行这样一个简单的配置
+
+```kotlin
+@Database(
+    entities = [
+        (UserEntity::class),
+        (RealNameInforEntity::class)], 
+    version = 2, exportSchema = true
+)
+abstract class AppDB : RoomDatabase(){
+
+    abstract fun getUserDao(): UserDao
+    
+    abstract fun getRealNameDao():RealNameInforDao
+}
+```
+
+然后利用对`Migration`的实现去对room进行兼容升级
+
+例如这样针对新增表的例子去实现
+
+```kotlin
+  private val DB_MARGIN_1_to_2 = 
+// 这里描述版本1到2的升级
+object :Migration(1,2){
+        override fun migrate(database: SupportSQLiteDatabase) {
+            //利用database执行sql语句对数据库进行兼容升级
+            database.execSQL("create table real_name_infor (id BLOB primary key autoincrement not null,userId text not null,country text not null,address text not null,cardID text not null,userRealName text not null)")
+        }
+    }
+```
+
+最后这样调用实现数据库兼容升级
+
+```kotlin
+object AppDBManager {
+
+    private var db: AppDB? = null
+
+    fun initDB(context: Application, uuid: String) {
+
+        if (db == null){
+            synchronized(AppDB::class.java){
+                if (db == null){
+
+                    db = Room.databaseBuilder(context.applicationContext, AppDB::class.java, "${uuid}_${context::class.java.simpleName}_app_db")
+                        .allowMainThreadQueries()
+                        .addMigrations(DB_MARGIN_1_to_2)
+                        .build()
+                }
+            }
+        }
+
+
+    }
+
+    private val DB_MARGIN_1_to_2 = object :Migration(1,2){
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("create table real_name_infor (id BLOB primary key autoincrement not null,userId text not null,country text not null,address text not null,cardID text not null,userRealName text not null)")
+        }
+    }
+}
+```
+
+### 新增字段方式的实现
+
+在之前userEntity中已经存在了realName那么我们这样对UserEntity进行拓展升级
+
+```kotlin
+@Entity(tableName = "kille_tom_user")
+class UserEntity(
+    @PrimaryKey(autoGenerate = false)
+    val id: String,
+    @ColumnInfo(name = "real_name")
+    val realName: String?,
+    @ColumnInfo(name = "nick_name")
+    val nickName: String,
+    val sex: String,
+    var birthday:String?,
+    var age:Int,
+    @ColumnInfo(name = "real_country")
+    val realCountry: String,
+    @ColumnInfo(name = "real_address")
+    val realAddress: String,
+    @ColumnInfo(name = "card_id")
+    val cardID: String
+)
+```
+
+对于字段拓展我们需要使用到`alter`语句去对UserEntity进行拓展，还记得`Migration`吗？
+
+对的只要是对数据进行兼容升级都需要创建对应版本的的`Migration`,有同学肯定问道，那怎么保证兼容的时序，在Room里面只要你设置好版本升级对应的方式，他就会自动执行了相应方式，所以我们不需要担心兼容升级不成功。
+
+OK,我们回到正题
+
+```kotlin
+//先修改下数据库配置
+@Database(
+    entities = [
+        (UserEntity::class),(RealNameInforEntity::class)], version = 3, exportSchema = true
+)
+abstract class AppDB : RoomDatabase(){
+
+    abstract fun getUserDao(): UserDao
+
+    abstract fun getRealNameDao():RealNameInforDao
+}
+//其次实现兼容
+object AppDBManager {
+
+    private var db: AppDB? = null
+
+    fun initDB(context: Application, uuid: String) {
+
+        if (db == null){
+            synchronized(AppDB::class.java){
+                if (db == null){
+
+                    db = Room.databaseBuilder(context.applicationContext, AppDB::class.java, "${uuid}_${context::class.java.simpleName}_app_db")
+                        .allowMainThreadQueries()
+                        .addMigrations(DB_MARGIN_1_to_2,DB_MARGIN_2_to_3)
+                        .build()
+                }
+            }
+        }
+
+
+    }
+
+    private val DB_MARGIN_2_to_3 = object :Migration(2,3){
+        override fun migrate(database: SupportSQLiteDatabase) {
+            database.execSQL("alter table kille_tom_user add column real_country text default null")
+            database.execSQL("alter table kille_tom_user add column real_address text default null")
+            database.execSQL("alter table kille_tom_user add column card_id text default null")
+        }
+    }
+```
+
+## 总结
+
+使用Room切记基本注释的概念，以及针对模糊索引 `like` 需要在补上`%`的使用，以及针对数据库兼容升级时，需要对`Migration`的实现以及调用。
