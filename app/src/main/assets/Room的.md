@@ -2,6 +2,12 @@
 
 Room做为jetpack的核心组件之一，其目的是通过对sqlLite进行封装，目的在于更为便捷的操作数据库。
 
+注意`Room`是一个关系映射(`ORM`)库
+
+Room对SQLLite进行抽象使用，在充分使用SQLLite的同时，并保持流畅的速度。
+
+![](C:\Users\KilleTom\AndroidStudioProjects\MyApplication\app\src\main\assets\room_architecture.png)
+
 ## Room的配置与使用
 
 1. 首先通过以下配置语句远程依赖使用Room
@@ -133,6 +139,12 @@ kapt 'androidx.room:room-compiler:2.2.5'
        }
    }
    ```
+
+```mermaid
+
+```
+
+
 
 
 
@@ -421,3 +433,7 @@ object AppDBManager {
 ## 总结
 
 使用Room切记基本注释的概念，以及针对模糊索引 `like` 需要在补上`%`的使用，以及针对数据库兼容升级时，需要对`Migration`的实现以及调用。
+
+对于上诉针对Room所讲的`Entity`、`Dao`、`DataBase`、`Migration`可通过如下图片简单的掌握下它们间关系：
+
+​	![](C:\Users\KilleTom\AndroidStudioProjects\MyApplication\app\src\main\assets\Room.svg)
